@@ -6,6 +6,12 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -26,96 +32,101 @@ export default function Register() {
         <GuestLayout>
             <Head title="Register" />
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
+            <div className='flex flex-col gap-6'>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-2xl">Register</CardTitle>
+                        <CardDescription>
+                            Enter your data to create new account
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={submit}>
+                            <div className="flex flex-col gap-6">
 
-                    <TextInput
-                        id="name"
-                        name="name"
-                        value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                    />
+                                <div className='flex gap-4'>
+                                    <div className="flex-1">
+                                        <Label htmlFor="email">Name</Label>
+                                        <Input
+                                            id="name"
+                                            type="text"
+                                            value={data.name}
+                                            disabled={processing}
+                                            onChange={(e) => setData("name", e.target.value)}
+                                            className={cn(
+                                                errors.name ? "border-red-600 border-1 "
+                                                    : "", "input-base-class"
+                                            )}
+                                        />
+                                        <InputError message={errors.name} />
+                                    </div>
 
-                    <InputError message={errors.name} className="mt-2" />
-                </div>
+                                    <div className="flex-1">
+                                        <Label htmlFor="email">Email</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={data.email}
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
+                                            onChange={(e) => setData("email", e.target.value)}
+                                            className={cn(
+                                                errors.email ? "border-red-600 border-1 " : "", "input-base-class"
+                                            )}
+                                        />
+                                        <InputError message={errors.email} />
+                                    </div>
+                                </div>
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                    />
+                                <div className='flex gap-4'>
+                                    <div className="flex-1">
+                                        <Label htmlFor="email">Password</Label>
+                                        <Input
+                                            id="password"
+                                            type="password"
+                                            value={data.password}
 
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
+                                            onChange={(e) => setData("password", e.target.value)}
+                                            className={cn(
+                                                errors.password ? "border-red-600 border-1 "
+                                                    : "", "input-base-class"
+                                            )}
+                                        />
+                                        <InputError message={errors.password} />
+                                    </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                                    <div className="flex-1">
+                                        <Label htmlFor="email">Password Conrfirmation</Label>
+                                        <Input
+                                            id="password_confirmation"
+                                            type="password"
+                                            value={data.password_confirmation}
 
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        required
-                    />
+                                            onChange={(e) => setData("password_confirmation", e.target.value)}
+                                            className={cn(
+                                                errors.password_confirmation ? "border-red-600 border-1 "
+                                                    : "", "input-base-class"
+                                            )}
+                                        />
+                                        <InputError message={errors.password_confirmation} />
+                                    </div>
+                                </div>
 
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
 
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        value={data.password_confirmation}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                        required
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
-                    />
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    <Link
-                        href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                    >
-                        Already registered?
-                    </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
-                    </PrimaryButton>
-                </div>
-            </form>
+                                <Button type="submit" className="w-full">
+                                    Register
+                                </Button>
+                            </div>
+                            <div className="mt-4 text-center text-sm">
+                                Already have an account?{" "}
+                                <Link href={route('login')}
+                                    className="underline underline-offset-4">
+                                    Sign in
+                                </Link>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+            </div>
         </GuestLayout>
     );
 }

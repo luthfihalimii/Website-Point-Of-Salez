@@ -3,7 +3,12 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import GuestLayout from '@/Layouts/GuestLayout';
+import { cn } from '@/lib/utils';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
@@ -38,70 +43,69 @@ export default function Login({
                 </div>
             )}
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
+            <div className="flex flex-col gap-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-2xl">Login</CardTitle>
+                        <CardDescription>
+                            Enter your email below to login to your account
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={submit}>
+                            <div className="flex flex-col gap-6">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={data.email}
+                                        placeholder="m@example.com"
+                                        onChange={(e) => setData("password", e.target.value)}
+                                        className={cn(
+                                            errors.email ? "border-red-600 border-1 " : "", "input-base-class"
+                                        )}
+                                    />
+                                    <InputError message={errors.email}/>
+                                </div>
+                                <div className="grid gap-2">
+                                    <div className="flex items-center">
+                                        <Label htmlFor="password">Password</Label>
+                                        <a
+                                            href="#"
+                                            className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                                        >
+                                            Forgot your password?
+                                        </a>
+                                    </div>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        value={data.password}
+                                        onChange={(e) => setData("password", e.target.value)}
+                                        className={cn(
+                                            errors.password ? "border-red-600 border-1 " : "", "input-base-class"
+                                        )}
+                                    />
+                                    <InputError message={errors.password}/>
+                                </div>
+                                <Button type="submit" className="w-full">
+                                    Login
+                                </Button>
 
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
-                        />
-                        <span className="ms-2 text-sm text-gray-600 dark:text-gray-400">
-                            Remember me
-                        </span>
-                    </label>
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )}
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
-                </div>
-            </form>
+                            </div>
+                            <div className="mt-4 text-center text-sm">
+                                Don&apos;t have an account?{" "}
+                                <Link href={route('register')}
+                                    className="underline underline-offset-4">
+                                    Sign up
+                                </Link>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+            </div>
         </GuestLayout>
     );
 }
