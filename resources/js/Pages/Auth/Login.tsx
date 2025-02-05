@@ -62,7 +62,8 @@ export default function Login({
                                         type="email"
                                         value={data.email}
                                         placeholder="m@example.com"
-                                        onChange={(e) => setData("password", e.target.value)}
+                                        disabled={processing}
+                                        onChange={(e) => setData("email", e.target.value)}
                                         className={cn(
                                             errors.email ? "border-red-600 border-1 " : "", "input-base-class"
                                         )}
@@ -82,6 +83,7 @@ export default function Login({
                                     <Input
                                         id="password"
                                         type="password"
+                                        disabled={processing}
                                         value={data.password}
                                         onChange={(e) => setData("password", e.target.value)}
                                         className={cn(
@@ -90,7 +92,7 @@ export default function Login({
                                     />
                                     <InputError message={errors.password}/>
                                 </div>
-                                <Button type="submit" className="w-full">
+                                <Button type="submit" className="w-full" disabled={processing}>
                                     Login
                                 </Button>
 
