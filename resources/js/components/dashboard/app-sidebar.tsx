@@ -29,14 +29,27 @@ import { usePage } from "@inertiajs/react"
 
 export function AppSidebar() {
 
-    const {url} = usePage()
+    const { url } = usePage()
     const data = {
         navMain: [
             {
-                title:"Dashboard",
-                url:"/dashboard",
-                icon:LucideLayoutDashboard,
-                isActive:url === "/dashboard"
+                title: "Dashboard",
+                url: "/dashboard",
+                icon: LucideLayoutDashboard,
+                isActive: url === "/dashboard"
+            },
+            {
+                title: "Manage",
+                url: "#",
+                icon: SquareTerminal,
+                isActive: url.startsWith("/category"),
+                items: [
+                    {
+                        title: "Product Category",
+                        url: "/category",
+                        isActive: url === "/category"
+                    }
+                ]
             }
         ]
     }
@@ -63,7 +76,7 @@ export function AppSidebar() {
                 <NavMain items={data.navMain} />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser/>
+                <NavUser />
             </SidebarFooter>
         </Sidebar>
     )
