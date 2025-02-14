@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Category } from "@/types"
+import { router } from "@inertiajs/react"
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { useState } from "react"
@@ -38,7 +39,8 @@ export const columns: ColumnDef<Category>[] = [
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem
-                                onClick={() => { }}
+                                onClick={() =>
+                                {router.visit(route('category.edit',category.id))}}
                             >
                                 Edit
                             </DropdownMenuItem>
