@@ -12,6 +12,20 @@ export interface Category {
     description?:string;
 }
 
+export interface Product {
+    id:number;
+    product_code:string;
+    name:string;
+    slug:string;
+    description:string;
+    image?:string;
+    price:number;
+    selling_price:number;
+    stock:number;
+    category_id:number;
+    category:Category
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {

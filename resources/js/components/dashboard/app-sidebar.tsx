@@ -42,13 +42,19 @@ export function AppSidebar() {
                 title: "Manage",
                 url: "#",
                 icon: SquareTerminal,
-                isActive: url.startsWith("/category"),
+                isActive: url.startsWith("/category") || url.startsWith("/product"),
                 items: [
                     {
                         title: "Product Category",
                         url: "/category",
                         isActive: url === "/category"
-                    }
+                    },
+                    {
+                        title: "Product",
+                        url: "/product",
+                        isActive: url === "/product"
+                    },
+
                 ]
             }
         ]
