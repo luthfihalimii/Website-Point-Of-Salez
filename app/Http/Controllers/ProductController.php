@@ -6,6 +6,7 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -38,7 +39,7 @@ class ProductController extends Controller
         $data = $request->validated();
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imagePath = $image->storeAs('public/products', $image->hashName());
+            $imagePath = $image->storeAs('products', $image->hashName());
             $data['image'] = $imagePath;
         }
         Product::create($data);
@@ -56,17 +57,32 @@ class ProductController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Product $product)
+    public function edit($id)
     {
-        //
+        return Inertia::render('Product/Edit',[
+            'product' => Product::findOrFail($id),
+            'category' => Category::get()
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
-        //
+        $data = $request->validated();
+        if ($request->hasFile('image')) {
+            if ($product->image) {
+                Storage::delete('products/'.basename($product->image));
+            }
+            $image = $request->file('image');
+            $imagePath = $image->storeAs('products', $image->hashName());
+            $data['image'] = $imagePath;
+        } else {
+            unset($data['image']);
+        }
+        $product->update($data);
+        return to_route('product.index');
     }
 
     /**

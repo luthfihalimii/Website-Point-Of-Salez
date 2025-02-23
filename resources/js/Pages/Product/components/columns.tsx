@@ -67,7 +67,7 @@ export const columns: ColumnDef<Product>[] = [
         accessorKey: "actions",
         header: "Actions",
         cell: ({ row }) => {
-            const category = row.original
+            const product = row.original
             const [isDialogOpen, setIsDialogOpen] = useState(false)
 
             const onDelete = (id: number) => {
@@ -94,7 +94,7 @@ export const columns: ColumnDef<Product>[] = [
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem
-                                onClick={() => { router.visit(route('category.edit', category.id)) }}
+                                onClick={() => { router.visit(route('product.edit', product.id)) }}
                             >
                                 Edit
                             </DropdownMenuItem>
@@ -111,9 +111,9 @@ export const columns: ColumnDef<Product>[] = [
 
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Hapus kategori {category.name}?</AlertDialogTitle>
+                                <AlertDialogTitle>Hapus produk {product.name}?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Apakah anda yakin ingin menghapus kategori ini ? tindakan ini
+                                    Apakah anda yakin ingin menghapus produk ini ? tindakan ini
                                     tidak dapat dibatalkan.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
@@ -121,7 +121,7 @@ export const columns: ColumnDef<Product>[] = [
                                 <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>
                                     Cancel
                                 </AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(category.id)}>
+                                <AlertDialogAction onClick={() => onDelete(product.id)}>
                                     Continue
                                 </AlertDialogAction>
                             </AlertDialogFooter>
