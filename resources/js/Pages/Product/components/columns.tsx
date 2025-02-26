@@ -71,12 +71,12 @@ export const columns: ColumnDef<Product>[] = [
             const [isDialogOpen, setIsDialogOpen] = useState(false)
 
             const onDelete = (id: number) => {
-                router.delete(route('category.destroy', id), {
+                router.delete(route('product.destroy', id), {
                     onSuccess: () => {
-                        toast.success("kategori berhasil dihapus")
+                        toast.success("Produk berhasil dihapus")
                     },
                     onError: () => {
-                        toast.error("Kategori gagal dihapus")
+                        toast.error("Produk gagal dihapus")
                     }
                 })
                 setIsDialogOpen(false)
@@ -97,6 +97,12 @@ export const columns: ColumnDef<Product>[] = [
                                 onClick={() => { router.visit(route('product.edit', product.id)) }}
                             >
                                 Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                onClick={() => {  }}
+                            >
+                                Detail
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => {
