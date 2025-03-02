@@ -100,7 +100,7 @@ export const columns: ColumnDef<Product>[] = [
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                                onClick={() => {  }}
+                                onClick={() => { router.visit(route('product.show', product.id)) }}
                             >
                                 Detail
                             </DropdownMenuItem>
