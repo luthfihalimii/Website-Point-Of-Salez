@@ -54,6 +54,11 @@ export function AppSidebar() {
                         url: "/product",
                         isActive: url === "/product"
                     },
+                    {
+                        title: "transaction",
+                        url: "/transaction",
+                        isActive: url === "/transaction"
+                    },
 
                 ]
             }
