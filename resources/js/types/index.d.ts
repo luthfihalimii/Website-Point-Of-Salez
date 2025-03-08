@@ -29,7 +29,7 @@ export interface Product {
 export type TransactionType = 'SALE' | 'PURCHASE'
 
 export interface TransactionItem {
-    id?:Number
+    id?:number
     transactionId?:number
     productId:number
     quantity:number

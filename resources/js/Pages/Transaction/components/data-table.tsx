@@ -66,7 +66,7 @@ export function DataTable<TData, TValue>({
                     className="max-w-sm"
                 />
                 <Button>
-                    <Link href={route('product.create')}>New Transaction</Link>
+                    <Link href={route('transaction.create')}>New Transaction</Link>
                 </Button>
             </div>
             <div className="rounded-md border">

@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('product',(ProductController::class));
     Route::get('/products/last-number/{categoryId}',[ProductController::class,'getLastProductNumber']);
 
-    Route::get('/transaction',[TransactionController::class,'index'])->name('transaction');
+    Route::resource('transaction',(TransactionController::class));
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
