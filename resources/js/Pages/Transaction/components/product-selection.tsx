@@ -49,7 +49,7 @@ export default function ProductSelection({ products, isOpen, onClose, onSelect, 
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogHeader>
                 <DialogTitle className="sr-only">Select Product</DialogTitle>
-                <DialogDescription className='sr-inl'>Select Product</DialogDescription>
+                <DialogDescription className='sr-only'>Select Product</DialogDescription>
             </DialogHeader>
             <DialogContent className='max-w-4xl max-h-[80vh] overflow-y-auto'>
                 <div className='flex gap-4 my-4'>
