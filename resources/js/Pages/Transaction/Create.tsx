@@ -7,6 +7,8 @@ import ProductSelection from './components/product-selection'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import Sale from './components/sale'
+import Purchase from './components/purchase'
+import { Input } from '@/components/ui/input'
 
 interface CreateTransactionProps extends PageProps {
     products: Product[]
@@ -74,6 +76,12 @@ export default function Create({ auth, products }: CreateTransactionProps) {
         );
     }
 
+    const calculateChange = () => {
+        const total = calculateTotal()
+        data.total_amount = total
+        return Math.max(paymentAmount - total, 0)
+    }
+
     return (
         <Authenticated>
             <Head title='Transaction' />
@@ -111,7 +119,14 @@ export default function Create({ auth, products }: CreateTransactionProps) {
                 )}
 
                 {/* Purchase Component */}
-                {data.type === 'PURCHASE' && (<div>Purchase component</div>)}
+                {data.type === 'PURCHASE' && (
+                    <Purchase
+                        selectedProducts={data.selectedProducts}
+                        onQuantityChange={handleQuantityChange}
+                        onRemoveProduct={handleRemoveProduct}
+                        calculateItemTotal={calculateItemTotal}
+                    />
+                )}
 
                 <div className='space-y-4 rounded-lg border p-4 mt-6'>
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-lg font-medium'>
@@ -121,6 +136,29 @@ export default function Create({ auth, products }: CreateTransactionProps) {
                                 style: "currency",
                                 currency: "IDR",
                             }).format(calculateTotal())}
+                        </span>
+                    </div>
+
+                    <div className='space-y-2'>
+                        <label htmlFor="" className='text-sm font-medium'>
+                            Payment Amount
+                        </label>
+                        <Input
+                            type='number'
+                            value={paymentAmount}
+                            onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
+                            className='text-right'
+                            disabled={data.type === "PURCHASE"}
+                        />
+                    </div>
+
+                    <div className='gris grid-cols-1 sm:grid-cols-2 gap-4 text-lg font-medium'>
+                        <span>Change:</span>
+                        <span className={paymentAmount < calculateTotal() ? "text-red-500" : "text-green-500"}>
+                            {new Intl.NumberFormat("id-ID", {
+                                style: "currency",
+                                currency: "IDR"
+                            }).format(calculateChange())}
                         </span>
                     </div>
                 </div>

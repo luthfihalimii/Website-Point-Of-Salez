@@ -33,11 +33,11 @@ export default function ProductSelection({ products, isOpen, onClose, onSelect, 
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||  // Cek apakah nama produk mengandung searchTerm
             product.product_code.toLowerCase().includes(searchTerm.toLowerCase()) // Cek apakah kode produk mengandung searchTerm
 
-         /**
-          * Memeriksa apakah kategori produk cocok dengan kategori yang dipilih
-          * Jika kategori yang dipilih adalah "all", maka cocok dengan semua kategori
-          * Jika tidak, hanya cocok jika kategori produk sama dengan kategori yang dipilih
-          */
+        /**
+         * Memeriksa apakah kategori produk cocok dengan kategori yang dipilih
+         * Jika kategori yang dipilih adalah "all", maka cocok dengan semua kategori
+         * Jika tidak, hanya cocok jika kategori produk sama dengan kategori yang dipilih
+         */
         const matchesCategory = selectedCategory === "all" || product.category.name === selectedCategory
 
         // Data Produk akan dimasukkan ke hasil filter jika sesuai dengan pencarian dan kategori
@@ -53,7 +53,11 @@ export default function ProductSelection({ products, isOpen, onClose, onSelect, 
             </DialogHeader>
             <DialogContent className='max-w-4xl max-h-[80vh] overflow-y-auto'>
                 <div className='flex gap-4 my-4'>
-                    <Input placeholder='Search products...' className='max-w-sm' />
+                    <Input
+                        placeholder='Search products...'
+                        className='max-w-sm'
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                     <Select
                         value={selectedCategory}
                         onValueChange={setSelectedCategory}
@@ -115,7 +119,7 @@ export default function ProductSelection({ products, isOpen, onClose, onSelect, 
                                         <TableCell>{transactionType === "SALE" && product.stock <= 0 ? (
                                             <span className='text-red-500'>Out of stock</span>
                                         ) : (
-                                            <Button size={"sm"} onClick={() => { onSelect(product); onClose()}}>
+                                            <Button size={"sm"} onClick={() => { onSelect(product); onClose() }}>
                                                 Select
                                             </Button>
                                         )}
