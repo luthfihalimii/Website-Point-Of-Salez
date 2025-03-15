@@ -20,7 +20,7 @@ export const columns: ColumnDef<Transaction>[] = [
             )
         },
         cell: ({ row }) => {
-            const date = new Date(row.getValue('creatd_at'))
+            const date = new Date(row.getValue('created_at'))
             return date.toLocaleDateString('id-ID', {
                 day: '2-digit',
                 month: 'short',

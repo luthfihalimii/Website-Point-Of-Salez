@@ -27,11 +27,15 @@ export default function Create({ auth, products }: CreateTransactionProps) {
         user_id: auth.user.id
     })
 
+    /** Fungsi untuk menambahkan produk ke dalam daftar transaksi */
     const handleProductSelect = (product: Product) => {
+        /** Cek apakah produk sudah ada dalam daftar selectedProducts */
         if (data.selectedProducts.some((item) => item.productId === product.id)) {
             toast.error("Product already added")
             return
         }
+
+        /** Menambahkan produk ke dalam state selectedProducts */
         setData("selectedProducts", [
             ...data.selectedProducts,
             {
@@ -43,43 +47,74 @@ export default function Create({ auth, products }: CreateTransactionProps) {
         ])
     }
 
+    /** Fungsi untuk mengubah jumlah produk dalam transaksi */
     const handleQuantityChange = (index: number, increment: boolean) => {
-        const updatedProducts = [...data.selectedProducts]
-        const item = updatedProducts[index]
+        const updatedProducts = [...data.selectedProducts] // Salin array selectedProducts
+        const item = updatedProducts[index] // Ambil item berdasarkan index
 
-        if (!item) return
+        if (!item) return // Jika item tidak ditemukan, keluar dari fungsi
+
+        /** Hitung jumlah baru berdasarkan operasi increment atau decrement */
         const newQuantity = increment ? item.quantity + 1 : item.quantity - 1
 
+        /** Jika jumlah menjadi kurang dari 1, hapus produk dari daftar */
         if (newQuantity < 1) {
             handleRemoveProduct(index)
             return
         }
 
+        /**
+         * Jika jumlah tidak valid (kurang dari 1 atau lebih besar dari stok untuk SALE), tampilkan error
+         */
         if (newQuantity < 1 || (data.type === "SALE" && newQuantity > item.product.stock)) {
             toast.error("Invalid quantity")
             return
         }
+
+        /**  Perbarui jumlah produk dalam state */
         updatedProducts[index] = { ...item, quantity: newQuantity }
         setData("selectedProducts", updatedProducts)
     }
 
+    /** Fungsi untuk menghapus produk dari daftar transaksi */
     const handleRemoveProduct = (index: number) => {
         setData("selectedProducts", data.selectedProducts.filter((_, i) => i !== index))
     }
 
-    const calculateItemTotal = (item: TransactionItem) => data.type === "SALE" ?
-        item.quantity * item.selling_price : item.quantity * item.product.price
+    /** Fungsi untuk menghitung total harga per item */
+    const calculateItemTotal = (item: TransactionItem) => data.type === "SALE"
+    ? item.quantity * item.selling_price // Jika transaksi SALE, gunakan harga jual
+    : item.quantity * item.product.price // Jika transaksi PURCHASE, gunakan harga beli
 
+    /** Fungsi untuk menghitung total seluruh transaksi */
     const calculateTotal = () => {
         return data.selectedProducts.reduce(
             (sum, item) => sum + calculateItemTotal(item), 0
         );
     }
 
+    /** Fungsi untuk menghitung kembalian pembayaran */
     const calculateChange = () => {
-        const total = calculateTotal()
-        data.total_amount = total
-        return Math.max(paymentAmount - total, 0)
+        const total = calculateTotal() //  Hitung total transaksi
+        data.total_amount = total // Simpan total ke dalam state
+        return Math.max(paymentAmount - total, 0) // Hitung kembalian, jika ada
+    }
+
+    const handleSubmit = () => {
+        if (!data.type || data.selectedProducts.length === 0) {
+            toast.error('Please complete the form')
+            return;
+        }
+
+        if (data.type === "SALE" && !paymentAmount) {
+            toast.error('Input payment')
+            return;
+        }
+
+        post(route('transaction.store'),{
+            onSuccess:() => toast.success('Transaction saved'),
+            onError:() => toast.error('Transaction failed')
+        })
     }
 
     return (
@@ -163,6 +198,12 @@ export default function Create({ auth, products }: CreateTransactionProps) {
                     </div>
                 </div>
 
+                {data.type && (
+                    <div className='flex justify-end flex-wrap gap-2 mt-6'>
+                        <Button variant={"outline"}>Cancel</Button>
+                        <Button onClick={handleSubmit}>Save transaction</Button>
+                    </div>
+                )}
             </div>
 
             {/* Select Product */}
