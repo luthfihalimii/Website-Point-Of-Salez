@@ -109,4 +109,12 @@ class TransactionController extends Controller
             ], 500);
         }
     }
+
+    public function show($id)
+    {
+        $transaction = Transaction::with(['items.product', 'user'])->findOrFail($id);
+        return Inertia::render('Transaction/Detail', [
+            'transaction' => $transaction
+        ]);
+    }
 }

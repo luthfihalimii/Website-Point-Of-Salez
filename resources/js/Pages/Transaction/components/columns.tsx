@@ -130,13 +130,7 @@ export const columns: ColumnDef<Transaction>[] = [
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem
-                                onClick={() => { router.visit(route('product.edit', product.id)) }}
-                            >
-                                Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={() => { router.visit(route('product.show', product.id)) }}
+                                onClick={() => { router.visit(route('transaction.show', product.id)) }}
                             >
                                 Detail
                             </DropdownMenuItem>
