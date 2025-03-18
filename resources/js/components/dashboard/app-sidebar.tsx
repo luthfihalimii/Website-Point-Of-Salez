@@ -1,5 +1,6 @@
 import * as React from "react"
 import {
+    Book,
     BookOpen,
     Bot,
     Command,
@@ -60,6 +61,19 @@ export function AppSidebar() {
                         isActive: url === "/transaction"
                     },
 
+                ]
+            },
+            {
+                title: "Report",
+                url: "#",
+                icon: Book,
+                //isActive: url.startsWith("/category") || url.startsWith("/product"),
+                items: [
+                    {
+                        title: "Sales Report",
+                        url: "/sales-report",
+                        isActive: url === "/sales-report"
+                    },
                 ]
             }
         ]
