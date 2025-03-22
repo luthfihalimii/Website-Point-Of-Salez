@@ -74,6 +74,11 @@ export function AppSidebar() {
                         url: "/sales-report",
                         isActive: url === "/sales-report"
                     },
+                    {
+                        title: "Purchases Report",
+                        url: "/purchases-report",
+                        isActive: url === "/purchases-report"
+                    },
                 ]
             }
         ]
