@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('transaction',(TransactionController::class));
 
     Route::get('sales-report',[ReportController::class,'salesreport']);
+    Route::get('sales-report-chart',[ReportController::class,'salesreportchart']);
     Route::get('purchases-report',[ReportController::class,'purchasesreport']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
