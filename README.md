@@ -12,7 +12,7 @@ Solusi Point of Sale (POS) modern berbasis Laravel + Inertia + React yang memban
 - **Antarmuka Responsif** – UI berbasis Tailwind CSS dengan komponen re-usable, dark mode, dan pengalaman pengguna yang konsisten di berbagai perangkat.
 
 ## Teknologi
-- **Backend:** Laravel 10, PHP 8.2, MySQL / MariaDB
+- **Backend:** Laravel 11, PHP 8.4, MySQL / MariaDB
 - **Frontend:** Inertia.js, React 18, TypeScript, Tailwind CSS, Shadcn UI
 - **Build Tools:** Vite, Bun / npm
 - **Utilities:** Eloquent ORM, Form Request Validation, Laravel Seeder & Factory
