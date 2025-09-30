@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -23,7 +24,10 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $defaultRoleId = Role::query()->where('is_default', true)->value('id') ?? Role::query()->value('id');
+
         return [
+            'role_id' => $defaultRoleId,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),

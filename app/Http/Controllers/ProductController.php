@@ -74,9 +74,12 @@ class ProductController extends Controller
     {
         $data = $request->validated();
         if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::delete('products/'.basename($product->image));
+            $previousImage = $product->getRawOriginal('image');
+
+            if ($previousImage) {
+                Storage::delete($previousImage);
             }
+
             $image = $request->file('image');
             $imagePath = $image->storeAs('products', $image->hashName());
             $data['image'] = $imagePath;
@@ -92,9 +95,11 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        $previousImage = $product->getRawOriginal('image');
         $product->delete();
-        if ($product->image) {
-            Storage::delete('products/'.basename($product->image));
+
+        if ($previousImage) {
+            Storage::delete($previousImage);
         }
         return to_route('product.index');
     }

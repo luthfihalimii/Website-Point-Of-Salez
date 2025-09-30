@@ -5,148 +5,136 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import Authenticated from '@/Layouts/AuthenticatedLayout'
 import { cn } from '@/lib/utils'
-import { Transaction } from '@/types'
+import type { PageProps, Transaction } from '@/types'
 import { Head, router } from '@inertiajs/react'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { DateRange } from 'react-day-picker'
 
-interface ReportPurchasesProps {
-    transactions: Transaction[]
+interface PurchasesSummary {
+    total_purchases: number
 }
 
-export default function PurchasesReport({ transactions }: ReportPurchasesProps) {
+interface PurchasesReportProps extends PageProps {
+    transactions: Transaction[]
+    summary: PurchasesSummary
+    filters: {
+        from: string
+        to: string
+    }
+}
 
-    // State untuk menyimpan rentang tanggal yang dipilih, diinisialisasi dengan undefined.
-    // Bisa langsung menggunakan undefined tanpa objek kosong jika tidak diperlukan.
-    const [date, setDate] = useState<DateRange | undefined>({
-        from: undefined,
-        to: undefined
-    })
+const currency = (value: number) =>
+    new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(value)
 
-    // Fungsi untuk menangani pemilihan tanggal.
-    // Memastikan bahwa kedua tanggal (from dan to) dipilih sebelum melakukan navigasi ke "/purchases-report".
-    const handleDateSelect = (selectedDate: DateRange | undefined) => {
-        setDate(selectedDate)
-        if (selectedDate?.from && selectedDate.to) {
-            // Mengirim permintaan untuk mendapatkan laporan penjualan berdasarkan rentang tanggal yang dipilih.
-            router.get("/purchases-report", {
-                from: format(selectedDate.from, "yyyy-MM-dd"),
-                to: format(selectedDate.to, "yyyy-MM-dd"),
+export default function PurchasesReport({ transactions, summary, filters }: PurchasesReportProps) {
+    const initialRange: DateRange | undefined = filters.from && filters.to ? {
+        from: parseISO(filters.from),
+        to: parseISO(filters.to),
+    } : undefined
+
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(initialRange)
+
+    const handleDateSelect = (selected: DateRange | undefined) => {
+        setDateRange(selected)
+        if (selected?.from && selected.to) {
+            router.get(route('purchases-report'), {
+                from: format(selected.from, 'yyyy-MM-dd'),
+                to: format(selected.to, 'yyyy-MM-dd'),
+            }, {
+                preserveScroll: true,
+                preserveState: true,
             })
         }
     }
 
-    // Fungsi untuk menonaktifkan tanggal yang lebih besar dari hari ini.
-    // Ini mencegah pengguna memilih tanggal di masa depan.
-    const disableDate = (date: Date) => {
-        return date > new Date()
-    }
-
-    // Menghitung total amount dari semua transaksi.
-    // Pastikan transactions sudah terdefinisi dan memiliki properti total_amount.
-    const totalAmount = transactions.reduce(
-        (sum, transactions) => sum + transactions.total_amount,
-        0
-    )
-
-
     return (
         <Authenticated>
-            <Head title='Purchases Sales' />
+            <Head title='Purchase Report' />
+            <div className='space-y-6 px-4 py-6 sm:px-6 lg:px-8'>
+                <div className='flex flex-wrap items-center justify-between gap-3'>
+                    <h1 className='text-2xl font-semibold'>Purchase Report</h1>
+                    <div className='text-sm text-muted-foreground'>Total spend: {currency(summary.total_purchases)}</div>
+                </div>
 
-            <div className='p-6'>
-                <Card className='dark:border-gray-800'>
-                    <CardHeader className='flex flex-row items-center justify-between space-y-8 pb-7'>
-                        <CardTitle className='text-2xl font-bold'>
-                            Purchases Report
-                        </CardTitle>
-                        <div className='flex items-center space-x-4'>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        id='date'
-                                        className={cn(
-                                            "w-[300px] justify-start text-left font-normal",
-                                            !date && "text-muted-foreground",
-                                        )}
-                                    >
-                                        <CalendarIcon className='mr-2 size-4' />
-                                        {date?.from ? (
-                                            date.to ? (
-                                                <>
-                                                    {format(date.from, "LLL dd, y")} -{" "}
-                                                    {format(date.to, "LLL dd, y")}
-                                                </>
-                                            ) : (
-                                                format(date.from, "LLL dd, y")
-                                            )
-                                        ) : (
-                                            <span>Pick a date range</span>
-                                        )}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className='w-auto p-0' align='start'>
-                                    <div className='p-3 bg-popover text-popover-foreground'>
-                                        <Calendar
-                                            mode='range'
-                                            defaultMonth={date?.from}
-                                            selected={date}
-                                            onSelect={handleDateSelect}
-                                            numberOfMonths={2}
-                                            disabled={disableDate}
-                                            className='flex space-x-4'
-                                        />
-                                    </div>
-
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                <Card>
+                    <CardHeader className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+                        <CardTitle className='text-lg font-semibold'>Date Range</CardTitle>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    id='date-range'
+                                    variant='outline'
+                                    className={cn(
+                                        'w-[280px] justify-start text-left font-normal',
+                                        !dateRange && 'text-muted-foreground',
+                                    )}
+                                >
+                                    <CalendarIcon className='mr-2 h-4 w-4' />
+                                    {dateRange?.from ? (
+                                        dateRange.to
+                                            ? `${format(dateRange.from, 'LLL dd, y')} - ${format(dateRange.to, 'LLL dd, y')}`
+                                            : format(dateRange.from, 'LLL dd, y')
+                                    ) : (
+                                        <span>Pick a date range</span>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className='w-auto p-0' align='start'>
+                                <div className='p-3'>
+                                    <Calendar
+                                        mode='range'
+                                        selected={dateRange}
+                                        onSelect={handleDateSelect}
+                                        numberOfMonths={2}
+                                        toDate={new Date()}
+                                        defaultMonth={dateRange?.from}
+                                    />
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className='overflow-x-auto'>
                         <Table>
                             <TableHeader>
-                                <TableRow className='dark:border-gray-800'>
+                                <TableRow>
                                     <TableHead>Transaction No</TableHead>
                                     <TableHead>Date</TableHead>
-                                    <TableHead>Type</TableHead>
+                                    <TableHead>Supplier</TableHead>
                                     <TableHead>Notes</TableHead>
                                     <TableHead className='text-right'>Amount</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {transactions.map((transaction) => (
-                                    <TableRow
-                                        key={transaction.id}
-                                    >
-                                        <TableCell>{transaction.no_transaction}</TableCell>
-                                        <TableCell>
-                                            {transaction.transaction_date ?
-                                                format(new Date(transaction.transaction_date),
-                                                    "LLL dd, y",
-                                                ) : "-"
-                                            }
-                                        </TableCell>
-                                        <TableCell>{transaction.type}</TableCell>
-                                        <TableCell>{transaction.notes || "-"}</TableCell>
-                                        <TableCell className='text-right'>
-                                            {new Intl.NumberFormat("id-ID", {
-                                                style: "currency",
-                                                currency: "IDR",
-                                            }).format(transaction.total_amount)}
+                                {transactions.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className='py-6 text-center text-sm text-muted-foreground'>
+                                            No purchases recorded for the selected period.
                                         </TableCell>
                                     </TableRow>
-                                ))}
-                                <TableRow className='font-bold'>
-                                    <TableCell>Total</TableCell>
-                                    <TableCell className='text-right'>
-                                        {new Intl.NumberFormat("id-ID", {
-                                            style: "currency",
-                                            currency: "IDR",
-                                        }).format(totalAmount)}
-                                    </TableCell>
+                                ) : (
+                                    transactions.map((transaction) => (
+                                        <TableRow key={transaction.id}>
+                                            <TableCell className='font-medium'>{transaction.no_transaction}</TableCell>
+                                            <TableCell>
+                                                {transaction.transaction_date
+                                                    ? format(new Date(transaction.transaction_date), 'dd MMM y')
+                                                    : '-'}
+                                            </TableCell>
+                                            <TableCell>{transaction.partner?.name ?? '-'}</TableCell>
+                                            <TableCell>{transaction.notes ?? '-'}</TableCell>
+                                            <TableCell className='text-right'>{currency(transaction.total_amount)}</TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                                <TableRow className='font-semibold'>
+                                    <TableCell colSpan={4}>Total</TableCell>
+                                    <TableCell className='text-right'>{currency(summary.total_purchases)}</TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>

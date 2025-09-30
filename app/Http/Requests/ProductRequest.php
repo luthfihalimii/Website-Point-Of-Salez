@@ -7,38 +7,33 @@ use Illuminate\Support\Str;
 
 class ProductRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'product_code' => 'required',
-            'name' => 'required|min:3',
-            'slug' => 'required',
-            'stock' => 'required|min:1|numeric',
-            'price' => 'required|min:1|numeric',
-            'selling_price' => 'required|min:1|numeric',
+            'product_code' => 'required|string|max:100',
+            'name' => 'required|string|min:3|max:255',
+            'slug' => 'required|string|max:255',
+            'stock' => 'required|integer|min:0',
+            'min_stock' => 'nullable|integer|min:0',
+            'price' => 'required|numeric|min:0',
+            'selling_price' => 'required|numeric|min:0',
+            'is_active' => 'boolean',
             'image' => 'nullable|mimes:png,jpg,jpeg',
-            'description' => 'required|min:4',
-            'category_id' => 'required|numeric'
+            'description' => 'required|string|min:4',
+            'category_id' => 'required|exists:categories,id',
         ];
     }
 
-    protected function prepareForValidation()
+    protected function prepareForValidation(): void
     {
         $this->merge([
-            'slug' => $this->slug ? : Str::slug($this->name)
+            'slug' => $this->slug ?: Str::slug($this->name),
+            'is_active' => $this->boolean('is_active'),
         ]);
     }
 }

@@ -60,7 +60,7 @@ export function DataTable<TData, TValue>({
         <>
             <div className="flex items-center justify-between py-4">
                 <Input
-                    placeholder="Filter products..."
+                    placeholder="Filter transactions..."
                     value={globalFilter}
                     onChange={(e) => setGlobalFilter(e.target.value)}
                     className="max-w-sm"

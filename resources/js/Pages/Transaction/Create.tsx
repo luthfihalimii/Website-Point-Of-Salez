@@ -1,212 +1,413 @@
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Authenticated from '@/Layouts/AuthenticatedLayout'
-import { PageProps, Product, TransactionItem, TransactionType } from '@/types'
-import { Head, useForm } from '@inertiajs/react'
-import React, { useState } from 'react'
-import ProductSelection from './components/product-selection'
 import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import Sale from './components/sale'
-import Purchase from './components/purchase'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import ProductSelection from './components/product-selection'
+import Purchase from './components/purchase'
+import Sale from './components/sale'
+import type { PageProps, Partner, Product, TransactionItem, TransactionType } from '@/types'
+import { Head, useForm } from '@inertiajs/react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+
+type PaymentMethod = 'CASH' | 'TRANSFER' | 'QRIS' | 'CREDIT'
 
 interface CreateTransactionProps extends PageProps {
     products: Product[]
+    partners: {
+        customers: Partner[]
+        suppliers: Partner[]
+    }
 }
 
-export default function Create({ auth, products }: CreateTransactionProps) {
+interface ExtendedTransactionItem extends TransactionItem {
+    price?: number
+    discount_amount?: number
+    tax_amount?: number
+}
 
+const paymentOptions: { label: string; value: PaymentMethod }[] = [
+    { label: 'Cash', value: 'CASH' },
+    { label: 'Transfer', value: 'TRANSFER' },
+    { label: 'QRIS', value: 'QRIS' },
+    { label: 'Credit', value: 'CREDIT' },
+]
+
+const currencyFormatter = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+})
+
+export default function Create({ auth, products, partners }: CreateTransactionProps) {
     const [isProductModalOpen, setIsProductModalOpen] = useState(false)
-    const [paymentAmount, setPaymentAmount] = useState<number>(0)
 
-    const { data, setData, post, errors } = useForm({
-        selectedProducts: [] as TransactionItem[],
+    const form = useForm({
+        selectedProducts: [] as ExtendedTransactionItem[],
         type: null as TransactionType | null,
-        notes: "",
+        partner_id: null as number | null,
+        notes: '',
+        discount_amount: 0,
+        tax_amount: 0,
         total_amount: 0,
-        user_id: auth.user.id
+        payment_method: 'CASH' as PaymentMethod,
+        payment_amount: 0,
+        change_amount: 0,
+        user_id: auth.user.id,
     })
 
-    /** Fungsi untuk menambahkan produk ke dalam daftar transaksi */
+    const { data, setData, post, processing, errors, transform, reset } = form
+
+    const handleTypeChange = (value: TransactionType) => {
+        setData('type', value)
+        setData('selectedProducts', [])
+        setData('partner_id', null)
+        setData('payment_method', value === 'SALE' ? 'CASH' : 'TRANSFER')
+        setData('payment_amount', 0)
+        setData('change_amount', 0)
+        setData('discount_amount', 0)
+        setData('tax_amount', 0)
+        toast(`Transaction type switched to ${value}`)
+    }
+
     const handleProductSelect = (product: Product) => {
-        /** Cek apakah produk sudah ada dalam daftar selectedProducts */
         if (data.selectedProducts.some((item) => item.productId === product.id)) {
-            toast.error("Product already added")
+            toast.error('Product already added')
             return
         }
 
-        /** Menambahkan produk ke dalam state selectedProducts */
-        setData("selectedProducts", [
-            ...data.selectedProducts,
-            {
-                productId: product.id,
-                product,
-                quantity: 1,
-                selling_price: product.selling_price
-            }
-        ])
+        const newItem: ExtendedTransactionItem = {
+            productId: product.id,
+            product,
+            quantity: 1,
+            selling_price: product.selling_price,
+            price: product.price,
+            discount_amount: 0,
+            tax_amount: 0,
+        }
+
+        setData('selectedProducts', [...data.selectedProducts, newItem])
     }
 
-    /** Fungsi untuk mengubah jumlah produk dalam transaksi */
+    const updateItem = (index: number, key: keyof ExtendedTransactionItem, value: number) => {
+        const updated = [...data.selectedProducts]
+        const item = updated[index]
+        if (!item) return
+
+        const sanitized = Number.isFinite(value) ? value : 0
+        updated[index] = {
+            ...item,
+            [key]: Math.max(sanitized, 0),
+        }
+
+        setData('selectedProducts', updated)
+    }
+
     const handleQuantityChange = (index: number, increment: boolean) => {
-        const updatedProducts = [...data.selectedProducts] // Salin array selectedProducts
-        const item = updatedProducts[index] // Ambil item berdasarkan index
+        const updatedProducts = [...data.selectedProducts]
+        const item = updatedProducts[index]
+        if (!item) return
 
-        if (!item) return // Jika item tidak ditemukan, keluar dari fungsi
-
-        /** Hitung jumlah baru berdasarkan operasi increment atau decrement */
         const newQuantity = increment ? item.quantity + 1 : item.quantity - 1
 
-        /** Jika jumlah menjadi kurang dari 1, hapus produk dari daftar */
         if (newQuantity < 1) {
             handleRemoveProduct(index)
             return
         }
 
-        /**
-         * Jika jumlah tidak valid (kurang dari 1 atau lebih besar dari stok untuk SALE), tampilkan error
-         */
-        if (newQuantity < 1 || (data.type === "SALE" && newQuantity > item.product.stock)) {
-            toast.error("Invalid quantity")
-            return
+        if (data.type === 'SALE') {
+            const stock = item.product.stock
+            if (newQuantity > stock) {
+                toast.error('Quantity exceeds available stock')
+                return
+            }
         }
 
-        /**  Perbarui jumlah produk dalam state */
         updatedProducts[index] = { ...item, quantity: newQuantity }
-        setData("selectedProducts", updatedProducts)
+        setData('selectedProducts', updatedProducts)
     }
 
-    /** Fungsi untuk menghapus produk dari daftar transaksi */
     const handleRemoveProduct = (index: number) => {
-        setData("selectedProducts", data.selectedProducts.filter((_, i) => i !== index))
+        setData('selectedProducts', data.selectedProducts.filter((_, i) => i !== index))
     }
 
-    /** Fungsi untuk menghitung total harga per item */
-    const calculateItemTotal = (item: TransactionItem) => data.type === "SALE"
-    ? item.quantity * item.selling_price // Jika transaksi SALE, gunakan harga jual
-    : item.quantity * item.product.price // Jika transaksi PURCHASE, gunakan harga beli
+    const calculateItemTotal = (item: ExtendedTransactionItem) => {
+        const basePrice = data.type === 'SALE'
+            ? item.selling_price
+            : item.price ?? item.product.price
 
-    /** Fungsi untuk menghitung total seluruh transaksi */
-    const calculateTotal = () => {
-        return data.selectedProducts.reduce(
-            (sum, item) => sum + calculateItemTotal(item), 0
-        );
+        const quantity = item.quantity
+        const discount = item.discount_amount ?? 0
+        const tax = item.tax_amount ?? 0
+
+        const total = quantity * basePrice - discount + tax
+        return Number.isFinite(total) ? Math.max(total, 0) : 0
     }
 
-    /** Fungsi untuk menghitung kembalian pembayaran */
-    const calculateChange = () => {
-        const total = calculateTotal() //  Hitung total transaksi
-        data.total_amount = total // Simpan total ke dalam state
-        return Math.max(paymentAmount - total, 0) // Hitung kembalian, jika ada
+    const calculateTotals = () => {
+        const subtotal = data.selectedProducts.reduce((sum, item) => sum + calculateItemTotal(item), 0)
+        const globalDiscount = Number(data.discount_amount) || 0
+        const globalTax = Number(data.tax_amount) || 0
+
+        const grandTotal = Math.max(subtotal - globalDiscount + globalTax, 0)
+        return { subtotal, grandTotal }
+    }
+
+    const calculateChange = (grandTotal: number) => {
+        if (data.type !== 'SALE') {
+            return 0
+        }
+
+        return Math.max((Number(data.payment_amount) || 0) - grandTotal, 0)
     }
 
     const handleSubmit = () => {
         if (!data.type || data.selectedProducts.length === 0) {
-            toast.error('Please complete the form')
-            return;
+            toast.error('Please complete the transaction form')
+            return
         }
 
-        if (data.type === "SALE" && !paymentAmount) {
-            toast.error('Input payment')
-            return;
+        const { grandTotal } = calculateTotals()
+
+        if (data.type === 'SALE' && (Number(data.payment_amount) || 0) < grandTotal) {
+            toast.error('Payment amount is insufficient')
+            return
         }
 
-        post(route('transaction.store'),{
-            onSuccess:() => toast.success('Transaction saved'),
-            onError:() => toast.error('Transaction failed')
+        transform((formData) => {
+            const totals = calculateTotals()
+            const change = calculateChange(totals.grandTotal)
+
+            return {
+                ...formData,
+                total_amount: totals.grandTotal,
+                change_amount: change,
+                payment_amount: formData.type === 'SALE' ? formData.payment_amount : 0,
+                payment_method: formData.type === 'SALE' ? formData.payment_method : null,
+                discount_amount: Number(formData.discount_amount) || 0,
+                tax_amount: Number(formData.tax_amount) || 0,
+                selectedProducts: formData.selectedProducts.map((item) => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    selling_price: formData.type === 'SALE'
+                        ? item.selling_price
+                        : (item.price ?? item.product.price),
+                    cost_price: formData.type === 'SALE'
+                        ? (item.price ?? item.product.price)
+                        : (item.price ?? item.product.price),
+                    discount_amount: item.discount_amount ?? 0,
+                    tax_amount: item.tax_amount ?? 0,
+                })),
+            }
+        })
+
+        post(route('transaction.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Transaction saved successfully')
+                reset()
+                setIsProductModalOpen(false)
+            },
+            onError: () => toast.error('Failed to save transaction'),
         })
     }
+
+    const { subtotal, grandTotal } = calculateTotals()
+    const changeAmount = calculateChange(grandTotal)
+
+    const partnerOptions = data.type === 'SALE' ? partners.customers : partners.suppliers
 
     return (
         <Authenticated>
             <Head title='Transaction' />
 
-            <div className='container py-6 px-4 sm:px-6 md:px-8'>
-                <div className='flex justify-end items-center flex-wrap gap-4'>
-                    <Select
-                        onValueChange={(value: TransactionType) => setData('type', value)}
-                    >
-                        <SelectTrigger className='w-[200px]'>
-                            <SelectValue placeholder="Select type transaction" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectLabel>Select Type Transaction</SelectLabel>
-                                <SelectItem value='SALE'>Sale</SelectItem>
-                                <SelectItem value='PURCHASE'>Purchase</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                    {/* button add product */}
-                    {data.type && (
-                        <Button onClick={() => setIsProductModalOpen(true)}>Add Product</Button>
-                    )}
-                </div>
+            <div className='container px-4 py-6 sm:px-6 md:px-8'>
+                <Card className='mb-6'>
+                    <CardHeader>
+                        <CardTitle>Transaction Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className='grid gap-4 md:grid-cols-2'>
+                        <div className='space-y-2'>
+                            <Label htmlFor='transaction-type'>Transaction Type</Label>
+                            <Select
+                                value={data.type ?? undefined}
+                                onValueChange={(value: TransactionType) => handleTypeChange(value)}
+                            >
+                                <SelectTrigger id='transaction-type'>
+                                    <SelectValue placeholder='Select transaction type' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>Type</SelectLabel>
+                                        <SelectItem value='SALE'>Sale</SelectItem>
+                                        <SelectItem value='PURCHASE'>Purchase</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            {errors.type && <p className='text-sm text-red-500'>{errors.type}</p>}
+                        </div>
 
-                {/* Sale Component */}
+                        {data.type && (
+                            <div className='space-y-2'>
+                                <Label htmlFor='partner'>
+                                    {data.type === 'SALE' ? 'Customer (optional)' : 'Supplier'}
+                                </Label>
+                                <Select
+                                    value={data.partner_id ? String(data.partner_id) : undefined}
+                                    onValueChange={(value) => setData('partner_id', value ? Number(value) : null)}
+                                >
+                                    <SelectTrigger id='partner'>
+                                        <SelectValue placeholder={data.type === 'SALE' ? 'Walk-in customer' : 'Select supplier'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {data.type === 'SALE' && (
+                                            <SelectItem value=''>Walk-in customer</SelectItem>
+                                        )}
+                                        {partnerOptions.map((partner) => (
+                                            <SelectItem key={partner.id} value={String(partner.id)}>
+                                                {partner.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.partner_id && <p className='text-sm text-red-500'>{errors.partner_id}</p>}
+                            </div>
+                        )}
+
+                        <div className='space-y-2 md:col-span-2'>
+                            <Label htmlFor='notes'>Notes</Label>
+                            <Textarea
+                                id='notes'
+                                value={data.notes}
+                                onChange={(event) => setData('notes', event.target.value)}
+                                placeholder='Additional notes (optional)'
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {data.type && (
+                    <div className='flex flex-wrap items-center justify-end gap-3'>
+                        <Button onClick={() => setIsProductModalOpen(true)}>Add Product</Button>
+                    </div>
+                )}
+
                 {data.type === 'SALE' && (
                     <Sale
                         selectedProducts={data.selectedProducts}
                         onQuantityChange={handleQuantityChange}
                         onRemoveProduct={handleRemoveProduct}
+                        onUpdateItem={(index, key, value) => updateItem(index, key, value)}
                         calculateItemTotal={calculateItemTotal}
                     />
                 )}
 
-                {/* Purchase Component */}
                 {data.type === 'PURCHASE' && (
                     <Purchase
                         selectedProducts={data.selectedProducts}
                         onQuantityChange={handleQuantityChange}
                         onRemoveProduct={handleRemoveProduct}
+                        onUpdateItem={(index, key, value) => updateItem(index, key, value)}
                         calculateItemTotal={calculateItemTotal}
                     />
                 )}
 
-                <div className='space-y-4 rounded-lg border p-4 mt-6'>
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-lg font-medium'>
-                        <span>Total Amount</span>
-                        <span>
-                            {new Intl.NumberFormat("id-ID", {
-                                style: "currency",
-                                currency: "IDR",
-                            }).format(calculateTotal())}
-                        </span>
-                    </div>
+                <Card className='mt-6'>
+                    <CardHeader>
+                        <CardTitle>Payment Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className='space-y-4'>
+                        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+                            <div className='space-y-2'>
+                                <Label htmlFor='subtotal'>Subtotal</Label>
+                                <Input id='subtotal' value={currencyFormatter.format(subtotal)} readOnly className='text-right font-semibold' />
+                            </div>
+                            <div className='space-y-2'>
+                                <Label htmlFor='discount'>Global Discount</Label>
+                                <Input
+                                    id='discount'
+                                    type='number'
+                                    min={0}
+                                    value={data.discount_amount}
+                                    onChange={(event) => setData('discount_amount', Number(event.target.value) || 0)}
+                                />
+                            </div>
+                            <div className='space-y-2'>
+                                <Label htmlFor='tax'>Global Tax</Label>
+                                <Input
+                                    id='tax'
+                                    type='number'
+                                    min={0}
+                                    value={data.tax_amount}
+                                    onChange={(event) => setData('tax_amount', Number(event.target.value) || 0)}
+                                />
+                            </div>
+                            <div className='space-y-2'>
+                                <Label htmlFor='grand-total'>Grand Total</Label>
+                                <Input id='grand-total' value={currencyFormatter.format(grandTotal)} readOnly className='text-right font-bold' />
+                            </div>
+                        </div>
 
-                    <div className='space-y-2'>
-                        <label htmlFor="" className='text-sm font-medium'>
-                            Payment Amount
-                        </label>
-                        <Input
-                            type='number'
-                            value={paymentAmount}
-                            onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
-                            className='text-right'
-                            disabled={data.type === "PURCHASE"}
-                        />
-                    </div>
-
-                    <div className='gris grid-cols-1 sm:grid-cols-2 gap-4 text-lg font-medium'>
-                        <span>Change:</span>
-                        <span className={paymentAmount < calculateTotal() ? "text-red-500" : "text-green-500"}>
-                            {new Intl.NumberFormat("id-ID", {
-                                style: "currency",
-                                currency: "IDR"
-                            }).format(calculateChange())}
-                        </span>
-                    </div>
-                </div>
+                        {data.type === 'SALE' && (
+                            <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
+                                <div className='space-y-2'>
+                                    <Label htmlFor='payment-method'>Payment Method</Label>
+                                    <Select
+                                        value={data.payment_method}
+                                        onValueChange={(value: PaymentMethod) => setData('payment_method', value)}
+                                    >
+                                        <SelectTrigger id='payment-method'>
+                                            <SelectValue placeholder='Method' />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {paymentOptions.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className='space-y-2'>
+                                    <Label htmlFor='payment-amount'>Payment Amount</Label>
+                                    <Input
+                                        id='payment-amount'
+                                        type='number'
+                                        min={0}
+                                        value={data.payment_amount}
+                                        onChange={(event) => setData('payment_amount', Number(event.target.value) || 0)}
+                                        className='text-right'
+                                    />
+                                </div>
+                                <div className='space-y-2'>
+                                    <Label htmlFor='change-amount'>Change</Label>
+                                    <Input
+                                        id='change-amount'
+                                        value={currencyFormatter.format(changeAmount)}
+                                        readOnly
+                                        className={`text-right font-semibold ${changeAmount > 0 ? 'text-green-600' : 'text-muted-foreground'}`}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {data.type && (
-                    <div className='flex justify-end flex-wrap gap-2 mt-6'>
-                        <Button variant={"outline"}>Cancel</Button>
-                        <Button onClick={handleSubmit}>Save transaction</Button>
+                    <div className='mt-6 flex flex-wrap justify-end gap-2'>
+                        <Button variant='outline' type='button' onClick={() => reset()}>
+                            Clear
+                        </Button>
+                        <Button onClick={handleSubmit} disabled={processing}>
+                            Save transaction
+                        </Button>
                     </div>
                 )}
             </div>
 
-            {/* Select Product */}
             {data.type && (
                 <ProductSelection
                     isOpen={isProductModalOpen}

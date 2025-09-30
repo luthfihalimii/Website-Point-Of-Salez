@@ -9,25 +9,30 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     use HasFactory;
+
     protected $guarded = [];
+
+    protected $casts = [
+        'price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
+    ];
 
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
-    /**
-     * Fungsi berikut akan mengubah nilai dari kolom image sebelum ditampilkan
-     * ke dalam aplikasi. Jika nilai dari kolom image tidak kosong, maka akan mengembalikan URL
-     * dari file gambar yang disimpan di dalam storage. Jika nilai dari kolom image kosong, maka
-     * akan mengembalikan URL dari placeholder gambar.
-     */
+    public function stockAdjustments()
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
+
     protected function image(): Attribute
     {
         return Attribute::make(
             get: fn($value) => $value
-            ? url('storage/'.  $value)
-            : 'https://kzmqeof5nva13225mfru.lite.vusercontent.net/placeholder.svg?height=600width=600'
+                ? url('storage/' . $value)
+                : 'https://kzmqeof5nva13225mfru.lite.vusercontent.net/placeholder.svg?height=600width=600'
         );
     }
 }

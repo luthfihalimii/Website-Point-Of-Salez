@@ -1,171 +1,170 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Product, Transaction } from "@/types"
-import { router } from "@inertiajs/react"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
-import { useState } from "react"
-import { toast } from "sonner"
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import type { Transaction } from '@/types'
+import { router } from '@inertiajs/react'
+import type { ColumnDef } from '@tanstack/react-table'
+import { ArrowUpDown, MoreHorizontal } from 'lucide-react'
+import { toast } from 'sonner'
+
+const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(value)
+
+const statusColor: Record<Transaction['status'], string> = {
+    COMPLETED: 'bg-emerald-100 text-emerald-700',
+    CANCELED: 'bg-red-100 text-red-700',
+    RETURNED: 'bg-amber-100 text-amber-700',
+}
 
 export const columns: ColumnDef<Transaction>[] = [
     {
-        accessorKey: "created_at",
-        header: () => {
-            return (
-                <Button variant={"ghost"}>
-                    Date
-                    <ArrowUpDown className="ml-2 size-4" />
-                </Button>
-            )
-        },
+        accessorKey: 'transaction_date',
+        header: ({ column }) => (
+            <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                Date
+                <ArrowUpDown className='ml-2 size-4' />
+            </Button>
+        ),
         cell: ({ row }) => {
-            const date = new Date(row.getValue('created_at'))
-            return date.toLocaleDateString('id-ID', {
+            const date = row.getValue<string>('transaction_date')
+            if (!date) return '-'
+
+            return new Date(date).toLocaleString('id-ID', {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
             })
-        }
-    },
-
-    {
-        accessorKey: "type",
-        header: () => {
-            return (
-                <Button variant={"ghost"}>
-                    Type
-                    <ArrowUpDown className="ml-2 size-4" />
-                </Button>
-            )
         },
+    },
+    {
+        accessorKey: 'no_transaction',
+        header: 'Transaction No.',
+        cell: ({ row }) => row.getValue('no_transaction') ?? '-',
+    },
+    {
+        accessorKey: 'type',
+        header: 'Type',
         cell: ({ row }) => {
-            const type = row.getValue("type") as string
+            const type = row.getValue<string>('type')
+            const isSale = type === 'SALE'
             return (
-                <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${type} === 'PURCHASE` ? 'bg-green-500' : 'bg-red-50'} />
-                    <span className={type === 'PURCHASE' ? 'text-green-600' : 'text-red-600'}>
-                        {type === 'PURCHASE' ? 'Purchase' : 'Sale'}
+                <div className='flex items-center gap-2'>
+                    <span className={`h-2 w-2 rounded-full ${isSale ? 'bg-emerald-500' : 'bg-sky-500'}`} />
+                    <span className={isSale ? 'text-emerald-700' : 'text-sky-700'}>
+                        {isSale ? 'Sale' : 'Purchase'}
                     </span>
                 </div>
             )
-        }
+        },
     },
-
     {
-        accessorKey: "total_amount",
-        header: ({ column }) => {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => {
+            const status = row.getValue<Transaction['status']>('status')
+            const color = statusColor[status]
             return (
-                <Button variant={"ghost"} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-                    Total
-                    <ArrowUpDown className="ml-2 size-4" />
-                </Button>
+                <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${color}`}>
+                    {status.charAt(0) + status.slice(1).toLowerCase()}
+                </span>
             )
         },
+    },
+    {
+        accessorKey: 'partner.name',
+        header: 'Partner',
         cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("total_amount"))
-            const formatted = new Intl.NumberFormat("id-ID", {
-                style: "currency",
-                currency: "IDR",
-            }).format(amount);
-
-            return formatted
+            const partner = row.original.partner
+            return partner ? partner.name : 'Walk-in'
         },
     },
-
     {
-        accessorKey: "items",
-        header: "Items",
+        accessorKey: 'total_amount',
+        header: ({ column }) => (
+            <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                Total
+                <ArrowUpDown className='ml-2 size-4' />
+            </Button>
+        ),
+        cell: ({ row }) => formatCurrency(Number(row.getValue('total_amount')) || 0),
+    },
+    {
+        accessorKey: 'payment_method',
+        header: 'Payment',
+        cell: ({ row }) => row.getValue('payment_method') ?? '-',
+    },
+    {
+        accessorKey: 'items',
+        header: 'Items',
         cell: ({ row }) => {
-            const items = row.original.items
-            const itemsList = items.map(item => `${item.product.name} (${item.quantity})`).join(", ")
+            const items = row.original.items ?? []
+            const itemsList = items.map((item) => `${item.product.name} (${item.quantity})`).join(', ')
 
             return (
-                <div className="max-w-[300px] truncate" title={itemsList}>
-                    {itemsList}
+                <div className='max-w-xs truncate text-sm' title={itemsList}>
+                    {itemsList || '-'}
                 </div>
             )
         },
     },
-
     {
-        accessorKey: "notes",
-        header: "Notes",
+        id: 'actions',
+        header: 'Actions',
         cell: ({ row }) => {
-            const notes = row.getValue("notes") as string
-            return notes || "-"
-        },
-    },
+            const transaction = row.original
 
-    {
-        accessorKey: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-            const product = row.original
-            const [isDialogOpen, setIsDialogOpen] = useState(false)
-
-            const onDelete = (id: number) => {
-                router.delete(route('product.destroy', id), {
-                    onSuccess: () => {
-                        toast.success("Produk berhasil dihapus")
-                    },
-                    onError: () => {
-                        toast.error("Produk gagal dihapus")
-                    }
+            const handleCancel = () => {
+                router.post(route('transaction.cancel', transaction.id), undefined, {
+                    onSuccess: () => toast.success('Transaction canceled'),
+                    onError: () => toast.error('Failed to cancel transaction'),
+                    preserveScroll: true,
                 })
-                setIsDialogOpen(false)
             }
 
+            const handleReturn = () => {
+                router.post(route('transaction.return', transaction.id), undefined, {
+                    onSuccess: () => toast.success('Transaction marked as returned'),
+                    onError: () => toast.error('Failed to mark return'),
+                    preserveScroll: true,
+                })
+            }
+
+            const canManage = transaction.status === 'COMPLETED'
+
             return (
-                <>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem
-                                onClick={() => { router.visit(route('transaction.show', product.id)) }}
-                            >
-                                Detail
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => {
-                                setTimeout(() => setIsDialogOpen(true), 100)
-                            }}>
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Hapus produk {product.name}?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Apakah anda yakin ingin menghapus produk ini ? tindakan ini
-                                    tidak dapat dibatalkan.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>
-                                    Cancel
-                                </AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(product.id)}>
-                                    Continue
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog> */}
-
-                </>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant='ghost' className='h-8 w-8 p-0'>
+                            <span className='sr-only'>Open menu</span>
+                            <MoreHorizontal className='h-4 w-4' />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => router.visit(route('transaction.show', transaction.id))}>
+                            View Detail
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            onClick={handleCancel}
+                            disabled={!canManage}
+                        >
+                            Cancel
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={handleReturn}
+                            disabled={!canManage}
+                        >
+                            Mark as Returned
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             )
-        }
+        },
     },
 ]

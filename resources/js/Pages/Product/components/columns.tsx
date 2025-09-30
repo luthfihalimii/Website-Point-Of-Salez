@@ -58,6 +58,24 @@ export const columns: ColumnDef<Product>[] = [
     },
 
     {
+        accessorKey: "min_stock",
+        header: "Min Stock",
+    },
+
+    {
+        accessorKey: "is_active",
+        header: "Status",
+        cell: ({ row }) => {
+            const isActive = Boolean(row.getValue('is_active'))
+            return (
+                <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'}`}>
+                    {isActive ? 'Active' : 'Inactive'}
+                </span>
+            )
+        },
+    },
+
+    {
         accessorKey: "category",
         header: "Kategori Produk",
         cell:({row}) => row.original.category.name

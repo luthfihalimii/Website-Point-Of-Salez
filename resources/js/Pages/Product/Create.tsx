@@ -26,8 +26,10 @@ export default function Create({ category }: CreateProductProps) {
         description: "",
         image: null as File | null,
         stock: "",
+        min_stock: "0",
         price: "",
         selling_price: "",
+        is_active: true,
         category_id: 0
     })
 
@@ -200,13 +202,42 @@ export default function Create({ category }: CreateProductProps) {
                                         <div className="grid gap-2">
                                             <Label>Stok Produk</Label>
                                             <Input
-                                                name="stock"
+                                                type='number'
+                                                name='stock'
                                                 value={data.stock}
                                                 disabled={processing}
-                                                onChange={(e) => setData("stock", e.target.value)}
+                                                onChange={(e) => setData('stock', e.target.value)}
                                                 className={cn(errors.stock ? 'border border-red-500' : '')}
                                             />
                                             <InputError message={errors.stock} />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label>Minimum Stock</Label>
+                                            <Input
+                                                type="number"
+                                                name="min_stock"
+                                                value={data.min_stock}
+                                                disabled={processing}
+                                                onChange={(e) => setData("min_stock", e.target.value)}
+                                                className={cn(errors.min_stock ? 'border border-red-500' : '')}
+                                            />
+                                            <InputError message={errors.min_stock} />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    id="is_active"
+                                                    type="checkbox"
+                                                    checked={data.is_active}
+                                                    disabled={processing}
+                                                    onChange={(e) => setData("is_active", e.target.checked)}
+                                                    className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                />
+                                                <Label htmlFor="is_active">Product is active</Label>
+                                            </div>
+                                            <InputError message={errors.is_active} />
                                         </div>
 
                                         <div className="grid gap-2">
