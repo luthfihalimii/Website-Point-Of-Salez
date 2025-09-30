@@ -78,7 +78,7 @@ export const columns: ColumnDef<Product>[] = [
     {
         accessorKey: "category",
         header: "Kategori Produk",
-        cell:({row}) => row.original.category.name
+        cell: ({ row }) => row.original.category?.name ?? "-",
     },
 
     {

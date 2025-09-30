@@ -22,7 +22,7 @@ export default function ProductSelection({ products, isOpen, onClose, onSelect, 
     // Membuat daftar kategori unik dari array produk
     const categories = Array.from(  // Mengubah hasil dari Set menjadi array
         new Set( // Menggunakan Set untuk menyimpan nilai unik dari kategori produk
-            products.map((p) => p.category.name) // Mengambil hanya nama kategori dari setiap produk
+            products.map((p) => p.category?.name) // Mengambil hanya nama kategori dari setiap produk
                 .filter((name): name is string => name !== undefined && name !== null) // Menyaring nilai yang tidak undefined atau null agar aman
         )
     )
@@ -38,7 +38,8 @@ export default function ProductSelection({ products, isOpen, onClose, onSelect, 
          * Jika kategori yang dipilih adalah "all", maka cocok dengan semua kategori
          * Jika tidak, hanya cocok jika kategori produk sama dengan kategori yang dipilih
          */
-        const matchesCategory = selectedCategory === "all" || product.category.name === selectedCategory
+        const productCategoryName = product.category?.name
+        const matchesCategory = selectedCategory === "all" || productCategoryName === selectedCategory
 
         // Data Produk akan dimasukkan ke hasil filter jika sesuai dengan pencarian dan kategori
         return matchesSearch && matchesCategory
@@ -100,7 +101,7 @@ export default function ProductSelection({ products, isOpen, onClose, onSelect, 
                                     <TableRow key={product.id}>
                                         <TableCell>{product.name}</TableCell>
                                         <TableCell>{product.product_code}</TableCell>
-                                        <TableCell>{product.category.name || "-"}</TableCell>
+                                        <TableCell>{product.category?.name ?? "-"}</TableCell>
 
                                         <TableCell>
                                             {new Intl.NumberFormat("id-ID", {
