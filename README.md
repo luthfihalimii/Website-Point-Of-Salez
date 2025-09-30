@@ -1,66 +1,81 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Website Point Of Salez
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Solusi Point of Sale (POS) modern berbasis Laravel + Inertia + React yang membantu bisnis ritel mengelola transaksi, stok, dan laporan keuangan dalam satu platform terpadu. Aplikasi ini dilengkapi landing page berwarna oranye-hitam dengan tipografi Poppins yang memberikan kesan premium sekaligus tetap ringan digunakan oleh tim kasir.
 
-## About Laravel
+## Fitur Utama
+- **Manajemen Penjualan & Pembelian** – Catat transaksi lengkap dengan perhitungan otomatis, detail item, diskon, dan metode pembayaran.
+- **Inventori Real-Time** – Pantau stok, tetapkan batas minimum, lakukan penyesuaian (stock adjustment), serta dapatkan peringatan stok menipis.
+- **Shift & Cash Session** – Buka/tutup kas, lacak uang awal dan akhir shift, dan simpan log audit untuk meminimalkan selisih kasir.
+- **Manajemen Partner & Supplier** – Simpan data pemasok/mitra beserta histori transaksi terkait.
+- **Laporan Komprehensif** – Dashboard harian, laporan penjualan, pembelian, profit & loss, serta ringkasan inventori dalam visualisasi interaktif.
+- **Kontrol Akses Berbasis Role** – Middleware khusus memastikan setiap user memiliki hak akses sesuai perannya.
+- **Antarmuka Responsif** – UI berbasis Tailwind CSS dengan komponen re-usable, dark mode, dan pengalaman pengguna yang konsisten di berbagai perangkat.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Teknologi
+- **Backend:** Laravel 10, PHP 8.2, MySQL / MariaDB
+- **Frontend:** Inertia.js, React 18, TypeScript, Tailwind CSS, Shadcn UI
+- **Build Tools:** Vite, Bun / npm
+- **Utilities:** Eloquent ORM, Form Request Validation, Laravel Seeder & Factory
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Persiapan Awal
+### Prasyarat
+- PHP 8.2+
+- Composer
+- Node.js 18+ dan npm / Bun
+- MySQL atau database lain yang kompatibel
+- Git
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Instalasi
+```bash
+# clone project
+git clone git@github.com:luthfihalimii/Website-Point-Of-Salez.git
+cd Website-Point-Of-Salez
 
-## Learning Laravel
+# salin konfigurasi environment
+cp .env.example .env
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# instal dependency backend
+composer install
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+# instal dependency frontend
+npm install       # atau bun install
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# generate application key
+php artisan key:generate
+```
 
-## Laravel Sponsors
+### Konfigurasi Database
+1. Buka file `.env` dan sesuaikan nilai `DB_DATABASE`, `DB_USERNAME`, serta `DB_PASSWORD`.
+2. Jalankan migrasi dan seeder untuk mengisi data dasar:
+```bash
+php artisan migrate --seed
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Menjalankan Aplikasi
+```bash
+# jalankan server Laravel
+php artisan serve
 
-### Premium Partners
+# di terminal lain, jalankan dev server frontend
+npm run dev
+```
+Aplikasi dapat diakses melalui `http://127.0.0.1:8000` dan asset frontend akan disajikan oleh Vite.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### Build Production
+```bash
+npm run build
+php artisan optimize
+```
 
-## Contributing
+### Menjalankan Test
+```bash
+php artisan test
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Workflow Pengembangan
+- Gunakan `git fetch upstream` untuk mengambil pembaruan dari repo sumber jika diperlukan.
+- Buat branch fitur baru (`git checkout -b feature/nama-fitur`) sebelum melakukan perubahan besar.
+- Pastikan menjalankan lint/test sebelum membuat pull request.
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Lisensi
+Project ini menggunakan lisensi [MIT](LICENSE). Silakan gunakan, modifikasi, dan distribusikan sesuai kebutuhan bisnis Anda.
